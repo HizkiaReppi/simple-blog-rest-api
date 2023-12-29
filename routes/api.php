@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\LogoutController;
 use App\Http\Controllers\PostController;
@@ -28,4 +29,5 @@ Route::post('/login', [LoginController::class, 'store'])->name('login');
 Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [LogoutController::class, 'destroy'])->name('logout');
     Route::resource('/posts', PostController::class)->names('posts')->except(['create', 'edit']);
+    Route::resource('/categories', CategoryController::class)->names('categories')->except(['create', 'edit']);
 });
