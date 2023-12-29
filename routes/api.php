@@ -27,5 +27,5 @@ Route::post('/login', [LoginController::class, 'store'])->name('login');
 
 Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [LogoutController::class, 'destroy'])->name('logout');
-    Route::resource('/article', PostController::class)->names('articles')->except(['create', 'edit']);
+    Route::resource('/posts', PostController::class)->names('posts')->except(['create', 'edit']);
 });

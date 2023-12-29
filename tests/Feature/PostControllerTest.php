@@ -24,7 +24,7 @@ class PostControllerTest extends TestCase
         $token = $user->createToken('TestToken')->accessToken;
         
         Passport::actingAs($user);
-        
+
         Post::truncate();
         User::truncate();
     }
@@ -40,7 +40,7 @@ class PostControllerTest extends TestCase
         Post::factory(20)->create();
 
         // Make a GET request to the endpoint
-        $response = $this->json('GET', '/api/article');
+        $response = $this->json('GET', '/api/posts');
 
         // Assert the response status code is 200
         $response->assertStatus(200);
@@ -70,5 +70,48 @@ class PostControllerTest extends TestCase
 
         // Assert the correct number of total items
         $response->assertJsonFragment(['total' => 20]);
+    }
+
+     /** @test */
+    public function it_returns_post_details_if_found()
+    {
+        // Create a post for testing
+        $post = Post::factory()->create();
+
+        // Hit the show endpoint with the post's slug
+        $response = $this->json('GET', '/api/posts/' . $post->slug);
+
+        // Assert the response status code is 200
+        $response->assertStatus(200);
+
+        // Assert the response has the correct structure
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'data' => [
+                'id',
+                'title',
+                'slug',
+                'content',
+                'image',
+                'user_id',
+                'category_id',
+                'created_at',
+                'updated_at',
+            ],
+        ]);
+
+        // Assert the response contains the post details
+        $response->assertJsonFragment(['id' => $post->id, 'title' => $post->title, 'slug' => $post->slug]);
+    }
+
+    /** @test */
+    public function it_returns_404_if_post_not_found()
+    {
+        // Hit the show endpoint with a non-existing post's slug
+        $response = $this->json('GET', '/api/posts/non-existing-slug');
+
+        // Assert the response status code is 404
+        $response->assertStatus(404);
     }
 }
