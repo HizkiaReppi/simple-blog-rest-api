@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\LogoutController;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\RegisterController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,4 +27,5 @@ Route::post('/login', [LoginController::class, 'store'])->name('login');
 
 Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [LogoutController::class, 'destroy'])->name('logout');
+    Route::resource('/article', PostController::class)->names('articles')->except(['create', 'edit']);
 });
