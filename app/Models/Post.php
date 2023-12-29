@@ -12,6 +12,8 @@ class Post extends Model
 
     protected $guarded = ['id'];
 
+    protected $disk = 'public';
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);

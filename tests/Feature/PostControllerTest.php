@@ -4,11 +4,16 @@ namespace Tests\Feature;
 
 use App\Models\Post;
 use App\Models\User;
+use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Passport\Passport;
 use Tests\TestCase;
 
 class PostControllerTest extends TestCase
 {
+    use WithFaker;
+
     public function setUp(): void
     {
         parent::setUp();
@@ -114,4 +119,86 @@ class PostControllerTest extends TestCase
         // Assert the response status code is 404
         $response->assertStatus(404);
     }
+
+    /** @test */
+    public function it_stores_post_with_image()
+    {
+        Storage::fake('public');
+
+        $response = $this->json('POST', '/api/posts', $this->validPostDataWithImage());
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Data Berhasil Disimpan!',
+            ]);
+
+        $this->assertDatabaseHas('posts', [
+            'image' => "images/test_image.jpg",
+        ]);
+    }
+
+    /** @test */
+    public function it_stores_post_without_image()
+    {
+        $response = $this->json('POST', '/api/posts', $this->validPostDataWithoutImage());
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Data Berhasil Disimpan!',
+            ]);
+
+        $this->assertDatabaseMissing('posts', [
+            'image' => 'image',
+        ]);
+    }
+
+    /** @test */
+    public function it_handles_validation_error()
+    {
+        $response = $this->json('POST', '/api/posts', $this->invalidPostData());
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+                'errors' => ["title" => [
+                    "The title field is required."
+                ]]
+            ]);
+    }
+
+    private function validPostDataWithImage()
+    {
+        $image = UploadedFile::fake()->image('test_image.jpg');
+
+        return [
+            'title' => $this->faker->sentence,
+            'slug' => $this->faker->slug,
+            'content' => $this->faker->paragraph,
+            'image' => $image,
+            'category_id' => 1,
+        ];
+    }
+
+    private function validPostDataWithoutImage()
+    {
+        return [
+            'title' => $this->faker->sentence,
+            'slug' => $this->faker->slug,
+            'content' => $this->faker->paragraph,
+            'category_id' => 1,
+        ];
+    }
+
+    private function invalidPostData()
+{
+    return [
+        'title' => '', 
+        'slug' => $this->faker->slug,
+        'content' => $this->faker->paragraph,
+        'category_id' => 1
+    ];
+}
+
 }
