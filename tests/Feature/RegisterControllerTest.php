@@ -2,19 +2,28 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\User;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class RegisterControllerTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use WithFaker;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        // Truncate the users table before each test
+        User::truncate();
+    }
+
 
     /** @test */
     public function it_requires_a_name()
     {
         $response = $this->json('POST', '/api/register', [
-            'username' => $this->faker->username,
+            'username' => 'Testing Register',
             'email' => $this->faker->safeEmail,
             'password' => 'password123',
             'password_confirmation' => 'password123',
@@ -28,7 +37,7 @@ class RegisterControllerTest extends TestCase
     public function it_requires_a_username()
     {
         $response = $this->json('POST', '/api/register', [
-            'name' => $this->faker->name,
+            'name' => 'Testing Register',
             'email' => $this->faker->safeEmail,
             'password' => 'password123',
             'password_confirmation' => 'password123',
@@ -42,8 +51,8 @@ class RegisterControllerTest extends TestCase
     public function it_requires_an_email()
     {
         $response = $this->json('POST', '/api/register', [
-            'name' => $this->faker->name,
-            'username' => $this->faker->username,
+            'name' => 'Testing Register',
+            'username' => 'Testing Register',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ]);
@@ -56,8 +65,8 @@ class RegisterControllerTest extends TestCase
     public function it_requires_a_valid_email()
     {
         $response = $this->json('POST', '/api/register', [
-            'name' => $this->faker->name,
-            'username' => $this->faker->username,
+            'name' => 'Testing Register',
+            'username' => 'Testing Register',
             'email' => 'invalid_email',
             'password' => 'password123',
             'password_confirmation' => 'password123',
@@ -71,8 +80,8 @@ class RegisterControllerTest extends TestCase
     public function it_requires_a_password()
     {
         $response = $this->json('POST', '/api/register', [
-            'name' => $this->faker->name,
-            'username' => $this->faker->username,
+            'name' => 'Testing Register',
+            'username' => 'Testing Register',
             'email' => $this->faker->safeEmail,
             'password_confirmation' => 'password123',
         ]);
@@ -85,8 +94,8 @@ class RegisterControllerTest extends TestCase
     public function it_requires_a_minimum_password_length()
     {
         $response = $this->json('POST', '/api/register', [
-            'name' => $this->faker->name,
-            'username' => $this->faker->username,
+            'name' => 'Testing Register',
+            'username' => 'testingregister',
             'email' => $this->faker->safeEmail,
             'password' => 'short',
             'password_confirmation' => 'short',
@@ -100,8 +109,8 @@ class RegisterControllerTest extends TestCase
     public function it_registers_a_user()
     {
         $userData = [
-            'name' => $this->faker->name,
-            'username' => $this->faker->username,
+            'name' => 'Testing Register',
+            'username' => 'testingregister',
             'email' => $this->faker->unique()->safeEmail,
             'password' => 'password123',
             'password_confirmation' => 'password123',
