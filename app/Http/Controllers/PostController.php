@@ -145,4 +145,20 @@ class PostController extends Controller
             return response()->json(['success' => false, 'message' => 'Artikel Gagal Diupdate!', 'errors' => $e->getMessage()], 500);
         }
     }
+
+    public function destroy(Post $post): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            $post->delete();
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Artikel Berhasil Dihapus!'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json(['success' => false, 'message' => 'Artikel Gagal Dihapus!', 'errors' => $e->getMessage()], 400);
+        }
+    }
 }

@@ -17,8 +17,6 @@ class PostControllerTest extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-        User::truncate();
-        Post::truncate();
         
         // Create a user and authenticate with Passport
         $user = User::factory()->create([
@@ -217,6 +215,38 @@ class PostControllerTest extends TestCase
         ]);
 
         $response->assertJsonFragment(['success' => true, 'message' => 'Artikel Berhasil Diupdate!']);
+    }
+
+    /** @test */
+    public function it_can_delete_a_post()
+    {
+        // Arrange: Create a post
+        $post = Post::factory()->create();
+
+        // Act: Send a DELETE request to the destroy endpoint
+        $response = $this->json('DELETE', '/api/article/' . $post->slug);
+
+        // Assert: Check the response status and message
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Artikel Berhasil Dihapus!',
+            ]);
+
+        // Assert: Check if the post is deleted from the database
+        $this->assertDatabaseMissing('posts', ['slug' => $post->slug]);
+    }
+
+    /** @test */
+    public function it_handles_invalid_post_id_for_deletion()
+    {
+        $response = $this->json('DELETE', '/api/article/not-found');
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Artikel Gagal Dihapus!',
+            ]);
     }
 
     private function validPostDataWithImage()
