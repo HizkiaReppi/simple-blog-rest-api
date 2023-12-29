@@ -17,6 +17,8 @@ class PostControllerTest extends TestCase
     public function setUp(): void
     {
         parent::setUp();
+        User::truncate();
+        Post::truncate();
         
         // Create a user and authenticate with Passport
         $user = User::factory()->create([
@@ -168,6 +170,55 @@ class PostControllerTest extends TestCase
             ]);
     }
 
+    /** @test */
+    public function it_updates_a_post()
+    {
+        // Create a post
+        $post = Post::factory()->create();
+
+        // Mock an image file
+        $image = UploadedFile::fake()->image('test_image.jpg');
+
+        // Update data
+        $data = [
+            'title' => 'Updated Title',
+            'slug' => 'updated-title',
+            'content' => 'Updated Content',
+            'image' => $image,
+            'category_id' => 1,
+        ];
+
+        // Make a PUT request to update the post
+        $response = $this->json('PUT', '/api/posts/' . $post->slug, $data);
+
+        // Assert the response status code is 200
+        $response->assertStatus(200);
+
+        // Assert the database has the updated post
+        $this->assertDatabaseHas('posts', [
+            'title' => 'Updated Title',
+            'slug' => 'updated-title',
+            'content' => 'Updated Content',
+            'category_id' => 1,
+        ]);
+
+        $this->assertDatabaseMissing('posts', [
+            'image' => 'image',
+        ]);
+
+        $this->assertDatabaseHas('posts', [
+            'image' => "images/test_image.jpg",
+        ]);
+
+        // Assert the response has the correct structure
+        $response->assertJsonStructure([
+            'success',
+            'message',
+        ]);
+
+        $response->assertJsonFragment(['success' => true, 'message' => 'Artikel Berhasil Diupdate!']);
+    }
+
     private function validPostDataWithImage()
     {
         $image = UploadedFile::fake()->image('test_image.jpg');
@@ -192,13 +243,12 @@ class PostControllerTest extends TestCase
     }
 
     private function invalidPostData()
-{
-    return [
-        'title' => '', 
-        'slug' => $this->faker->slug,
-        'content' => $this->faker->paragraph,
-        'category_id' => 1
-    ];
-}
-
+    {
+        return [
+            'title' => '', 
+            'slug' => $this->faker->slug,
+            'content' => $this->faker->paragraph,
+            'category_id' => 1
+        ];
+    }
 }

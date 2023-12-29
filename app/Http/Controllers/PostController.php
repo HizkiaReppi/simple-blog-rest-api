@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
@@ -86,5 +87,62 @@ class PostController extends Controller
         return $post ?
             response()->json(['success' => true, 'message' => 'Detail Artikel!', 'data' => $post], 200) :
             response()->json(['success' => false, 'message' => 'Artikel Tidak Ditemukan!', 'data' => ''], 404);
+    }
+
+    public function update(Request $request, Post $post): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            $validator = Validator::make($request->all(), [
+                'title' => ['required', 'max:255'],
+                'slug' => ['nullable', 'unique:posts,slug,' . $post->id],
+                'content' => ['required'],
+                'image' => ['image', 'max:2048'],
+                'category_id' => ['required'],
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors'  => $validator->errors()
+                ], 422);
+            }
+
+            if ($request->hasFile('image')) {
+                Storage::disk('public')->delete($post->image);
+                $image = $request->file('image');
+                $imageName = $image->getClientOriginalName();
+                $imagePath = $image->storeAs('images', $imageName, 'public');
+            } else {
+                $imagePath = $post->image;
+            }
+
+            $postData = [
+                'title' => $request->input('title'),
+                'content' => $request->input('content'),
+                'image' => $imagePath,
+                'category_id' => $request->input('category_id'),
+            ];
+
+            // Update the slug only if provided
+            if ($request->filled('slug')) {
+                $postData['slug'] = Str::slug($request->input('slug'));
+            }
+
+            $post->update($postData);
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Artikel Berhasil Diupdate!'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if (isset($imagePath)) {
+                Storage::disk('public')->delete($imagePath);
+            }
+
+            return response()->json(['success' => false, 'message' => 'Artikel Gagal Diupdate!', 'errors' => $e->getMessage()], 500);
+        }
     }
 }
